@@ -75,41 +75,38 @@ cx_err_t cx_bn_gf2_n_mul(cx_bn_t bn_r,
     }
 
     // Preliminaries
-    cx_bn_t bn_tempa, bn_copy;
-    uint32_t bit_indexb = 0;
+    cx_bn_t bn_temp, bn_copy;
+    uint32_t bit_index = 0;
     size_t nbytes;
     bool bit_set = 0;
 
     CX_CHECK(cx_bn_nbytes(bn_n, &nbytes));
-    CX_CHECK(cx_bn_alloc(&bn_tempa, nbytes));
+    CX_CHECK(cx_bn_alloc(&bn_temp, nbytes));
     CX_CHECK(cx_bn_alloc(&bn_copy, nbytes));
 
-    CX_CHECK(cx_bn_copy(bn_tempa, bn_a));
+    CX_CHECK(cx_bn_copy(bn_temp, bn_a));
     CX_CHECK(cx_bn_set_u32(bn_r, (uint32_t) 0));
 
     // Main loop for multiplication
-    if (nbits_a) {
-        while (nbits_b > bit_indexb) {
-            CX_CHECK(cx_bn_tst_bit(bn_b, bit_indexb, &bit_set));
-            if (bit_set) {
-                CX_CHECK(cx_bn_copy(bn_copy, bn_r));
-                CX_CHECK(cx_bn_xor(bn_r, bn_tempa, bn_copy));
-            }
+    while (nbits_a && nbits_b) {
+        CX_CHECK(cx_bn_tst_bit(bn_b, bit_index++, &bit_set));
+        if (bit_set) {
+            CX_CHECK(cx_bn_copy(bn_copy, bn_r));
+            CX_CHECK(cx_bn_xor(bn_r, bn_temp, bn_copy));
+        }
 
-            CX_CHECK(cx_bn_shl(bn_tempa, 1));
-            CX_CHECK(cx_bn_tst_bit(bn_tempa, degree, &bit_set));
+        if (!--nbits_b) break;
 
-            if (bit_set) {
-                CX_CHECK(cx_bn_copy(bn_copy, bn_tempa));
-                CX_CHECK(cx_bn_xor(bn_tempa, bn_n, bn_copy));
-            }
-
-            bit_indexb++;
+        CX_CHECK(cx_bn_shl(bn_temp, 1));
+        if ((bit_set = (nbits_a++ == degree))) {
+            CX_CHECK(cx_bn_copy(bn_copy, bn_temp));
+            CX_CHECK(cx_bn_xor(bn_temp, bn_n, bn_copy));
+            CX_CHECK(cx_bn_cnt_bits(bn_temp, &nbits_a));
         }
     }
 
     // Clean up
-    CX_CHECK(cx_bn_destroy(&bn_tempa));
+    CX_CHECK(cx_bn_destroy(&bn_temp));
     CX_CHECK(cx_bn_destroy(&bn_copy));
 
 end:
