@@ -561,8 +561,7 @@ static void display_check_result_page(const bool result) {
  */
 
 enum sskr_gen {
-    SSKR_GEN_BACK_BUTTON_TOKEN = FIRST_USER_TOKEN,
-    SSKR_GEN_SELECT_SHARENUM_TOKEN,
+    SSKR_GEN_SELECT_SHARENUM_TOKEN = FIRST_USER_TOKEN,
     SSKR_GEN_SELECT_THRESHOLD_TOKEN,
     SSKR_GEN_RESULT_TOKEN,
 };
@@ -587,24 +586,14 @@ static void sskr_sharenum_validate(const uint8_t *sharenumentry, uint8_t length)
     }
 }
 
-static void sskr_sharenum_entry_cb(int token, uint8_t index) {
-    UNUSED(index);
-    // Callback for the key navigation (back key mainly)
-    if (token == SSKR_GEN_BACK_BUTTON_TOKEN) {
-        display_select_generate_sskr_page();
-    }
-}
-
 void display_sskr_select_numshares_page() {
     // Draw the keypad
     nbgl_useCaseKeypadDigits("Enter number of SSKR shares\nto generate (1 - 16)",
                              1,
                              MAX_NUMBER_LENGTH,
-                             SSKR_GEN_BACK_BUTTON_TOKEN,
                              false,
-                             TUNE_TAP_CASUAL,
                              sskr_sharenum_validate,
-                             sskr_sharenum_entry_cb);
+                             display_select_generate_sskr_page);
 }
 
 char item_buffer[15];
@@ -703,24 +692,14 @@ static void sskr_threshold_validate(const uint8_t *thresholdentry, uint8_t lengt
     }
 }
 
-static void sskr_threshold_entry_cb(int token, uint8_t index) {
-    UNUSED(index);
-    // Callback for the key navigation (back key mainly)
-    if (token == SSKR_GEN_BACK_BUTTON_TOKEN) {
-        display_sskr_select_numshares_page();
-    }
-}
-
 void display_sskr_select_threshold_page() {
     // Draw the keypad
     nbgl_useCaseKeypadDigits("Enter threshold value",
                              1,
                              MAX_NUMBER_LENGTH,
-                             SSKR_GEN_BACK_BUTTON_TOKEN,
                              false,
-                             TUNE_TAP_CASUAL,
                              sskr_threshold_validate,
-                             sskr_threshold_entry_cb);
+                             display_sskr_select_numshares_page);
 }
 
 /*
