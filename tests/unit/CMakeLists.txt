@@ -170,6 +170,10 @@ target_link_libraries(test_sss PUBLIC cmocka gcov testutils sss)
 add_executable(test_sskr tests/sskr.c)
 target_link_libraries(test_sskr PUBLIC cmocka gcov testutils sskr sss)
 
+add_executable(test_sskr_hex_check ./tests/sskr_hex_check.c ../../src/common/bip39/seed_rom_variables.c ../../src/common/bip39/seed_bip39.c ../../src/common/sskr/seed_rom_variables.c ../../src/common/sskr/seed_sskr.c)
+target_include_directories(test_sskr_hex_check PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../src/common)
+target_link_libraries(test_sskr_hex_check PUBLIC cmocka gcov sskr sss testutils)
+
 add_executable(test_bip39 ./tests/bip39.c ../../src/common/bip39/seed_rom_variables.c  ../../src/common/bip39/seed_bip39.c)
 target_include_directories(test_bip39 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../src/common)
 target_link_libraries(test_bip39 PUBLIC cmocka gcov testutils)
@@ -182,6 +186,6 @@ add_executable(test_words ./tests/words.c ../../src/common/bip39/seed_rom_variab
 target_include_directories(test_words PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../src/common)
 target_link_libraries(test_words PUBLIC cmocka gcov testutils sskr sss)
 
-foreach(target test_sss test_sskr test_bip39 test_roundtrip test_words)
+foreach(target test_sss test_sskr test_sskr_hex_check test_bip39 test_roundtrip test_words)
     add_test(NAME ${target} COMMAND ${target})
 endforeach()
