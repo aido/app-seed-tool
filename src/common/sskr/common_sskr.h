@@ -44,6 +44,18 @@ unsigned int bolos_ux_sskr_hex_check(const unsigned char *sskr_shares_hex,
                                      unsigned int sskr_shares_hex_length,
                                      unsigned int sskr_share_count);
 
+// Combine hex encoded SSKR shares into a secret
+unsigned int bolos_ux_sskr_combine(unsigned char *sskr_shares_hex,
+                                   unsigned int sskr_shares_hex_length,
+                                   unsigned int sskr_shares_count,
+                                   unsigned char *output);
+
+// Decode a serialized SSKR share into space separated ByteWords
+unsigned int bolos_ux_sskr_share_hex_decode(unsigned char *input,
+                                            unsigned int input_len,
+                                            unsigned char *output,
+                                            unsigned int output_len);
+
 unsigned int bolos_ux_sskr_get_word_idx_starting_with(const unsigned char *prefix,
                                                       const unsigned int prefixlength);
 unsigned int bolos_ux_sskr_idx_strcpy(const unsigned int index, unsigned char *buffer);
