@@ -136,6 +136,8 @@ cx_err_t cx_mpi_mod_pow(cx_mpi_t *r, const cx_mpi_t *a, const cx_mpi_t *e,
                         const cx_mpi_t *n);
 cx_err_t cx_mpi_is_prime(cx_mpi_t *x, bool *prime);
 cx_err_t cx_mpi_next_prime(cx_mpi_t *x);
+cx_err_t cx_mpi_gf2_n_mul(cx_mpi_t *r, const cx_mpi_t *a, const cx_mpi_t *b,
+                          const cx_mpi_t *n, const cx_mpi_t *h);
 void cx_mpi_reverse(cx_mpi_t *x, uint32_t nbytes);
 void cx_mpi_swap(cx_mpi_t *a, cx_mpi_t *b, const int c);
 
@@ -217,14 +219,12 @@ cx_err_t cx_ecdomain_generator_bn(cx_curve_t cv, cx_ecpoint_t *P);
 // cxlib.c
 unsigned int sys_get_api_level(void);
 cx_err_t cx_get_random_bytes(void *buffer, size_t len);
-cx_err_t cx_trng_get_random_data(void *buffer, size_t len);
 uint32_t cx_crc32(const void *_buf, size_t len);
 
 // cx_aes_sdk2.c
 cx_err_t cx_aes_set_key_hw(const cx_aes_key_t *key, uint32_t mode);
 cx_err_t cx_aes_block_hw(const unsigned char *inblock,
                              unsigned char *outblock);
-void cx_aes_reset_hw(void);
 
 // cx_twisted_edwards.c
 cx_err_t cx_twisted_edwards_recover_x(cx_mpi_ecpoint_t *P, uint32_t sign);
