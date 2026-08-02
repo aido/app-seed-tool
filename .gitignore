@@ -19,6 +19,9 @@ fuzzing/build/
 # Editors
 .idea/
 
+# Ragger functional tests
+snapshots-tmp/
+
 # Python
 *.pyc[cod]
 *.egg
