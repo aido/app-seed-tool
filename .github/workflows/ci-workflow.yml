@@ -3,6 +3,15 @@ name: Compilation & tests
 
 on:
   workflow_dispatch:
+    inputs:
+      golden_run:
+        type: choice
+        required: true
+        default: 'Raise an error (default)'
+        description: CI behavior if the test snapshots are different than expected.
+        options:
+          - 'Raise an error (default)'
+          - 'Open a PR'
   push:
     branches:
       - master
@@ -30,3 +39,4 @@ jobs:
       test_dir: tests/functional
       post_stack_consumption: false
       run_for_devices: '["stax", "flex", "apex_p"]'
+      regenerate_snapshots: ${{ github.event_name == 'workflow_dispatch' && inputs.golden_run == 'Open a PR' }}
