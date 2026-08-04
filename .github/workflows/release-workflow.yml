@@ -10,7 +10,42 @@ on:
 jobs:
   create_release:
     name: Create Release
-    if: github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') && github.ref == 'refs/heads/develop'
+    # `workflow_run` fires for every run of "Compilation & tests", and that
+    # workflow runs on `pull_request` -- including pull requests opened from a
+    # fork. The run it fires for is untrusted; this job is not. It holds
+    # `contents: write` and publishes release assets, so what it agrees to act
+    # on has to be pinned down here.
+    #
+    # `github.ref == 'refs/heads/develop'` used to be the third condition and
+    # was not one. A `workflow_run` job always runs from the default branch of
+    # this repository, with `github.ref` set to it, so on a repository whose
+    # default branch is `develop` that comparison is true for every trigger
+    # whatever the run that caused it. The two past runs of this workflow both
+    # report `develop` for exactly that reason.
+    #
+    # That left `startsWith(head_branch, 'v')` as the only real filter, over a
+    # value the author of a fork branch chooses. Naming a fork branch after a
+    # tag this repository already has -- v1.8.1 exists -- satisfies it, makes
+    # the checkout below resolve against this repository's tag, and hands
+    # `ncipollo/release-action` (`allowUpdates: true`, `makeLatest: true`) an
+    # artifact built from the fork's own source, to publish over a released
+    # version.
+    #
+    # So the trigger is bounded by where the run came from rather than by what
+    # it is called:
+    #
+    #   event == 'push'                 a release is cut by pushing a tag; a
+    #                                   pull request never is.
+    #   head_repository == repository   the push happened here, so whoever made
+    #                                   it already has write access.
+    #
+    # The tag-name check stays, as the last of the three rather than the only
+    # one: it says which pushes are releases, not who may cause one.
+    if: >-
+      github.event.workflow_run.conclusion == 'success'
+      && github.event.workflow_run.event == 'push'
+      && github.event.workflow_run.head_repository.full_name == github.repository
+      && startsWith(github.event.workflow_run.head_branch, 'v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -20,11 +55,19 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
 
+      # The tag name reaches the shell through the environment rather than
+      # through `${{ }}`. Interpolated into the script it would be pasted into
+      # the text of the command before bash reads it, and a Git ref may hold
+      # `;`, `|`, `&`, `$` and backticks -- none of them among the characters
+      # git refuses in a ref name -- so a tag called `v1$(...)` ran whatever it
+      # contained, in a job holding `contents: write`. Read from the
+      # environment and quoted, it is data.
       - name: Set VERSION variable from tag
+        env:
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
-          HEAD_BRANCH=${{ github.event.workflow_run.head_branch }}
-          echo "VERSION_NUMBER=${HEAD_BRANCH#v}" >> ${GITHUB_ENV}
-          echo "VERSION_NAME=${HEAD_BRANCH//./_}" >> ${GITHUB_ENV}
+          echo "VERSION_NUMBER=${HEAD_BRANCH#v}" >> "${GITHUB_ENV}"
+          echo "VERSION_NAME=${HEAD_BRANCH//./_}" >> "${GITHUB_ENV}"
 
       - name: Download app binaries
         uses: dawidd6/action-download-artifact@v6
@@ -36,8 +79,12 @@ jobs:
           workflow_conclusion: success
           skip_unpack: true
 
+      # Quoted for the same reason as the step above, one step further along
+      # the same value: VERSION_NAME is the tag with its dots replaced, so it
+      # is still the ref name, and unquoted it is subject to word splitting and
+      # globbing. Reported by shellcheck through actionlint as SC2086.
       - name: Rename app binaries
-        run: ls -la ./bin/ && sudo mv ./bin/compiled_app_binaries.zip ./bin/compiled_app_binaries.${VERSION_NAME}.zip && ls -la ./bin/
+        run: ls -la ./bin/ && sudo mv ./bin/compiled_app_binaries.zip "./bin/compiled_app_binaries.${VERSION_NAME}.zip" && ls -la ./bin/
 
       - name: Create Release
         uses: ncipollo/release-action@v1
